@@ -1,0 +1,5 @@
+*.rrd
+*.zip
+benchmark_results.json
+__pycache__/
+.DS_Store

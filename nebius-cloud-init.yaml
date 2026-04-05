@@ -1,0 +1,26 @@
+#cloud-config
+users:
+  - name: chloepv
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWGZazWKU15xZkJLsTWGwEyr8rx3p+Whk4TcpeNwbI1 chloe.pilonv@gmail.com
+
+package_update: true
+
+packages:
+  - docker.io
+  - vulkan-tools
+
+runcmd:
+  # Install NVIDIA graphics libraries (Vulkan + OpenGL support)
+  - apt-get install -y libnvidia-gl-580
+  # Enable and start Docker
+  - systemctl enable docker
+  - systemctl start docker
+  - usermod -aG docker chloepv
+  # Set up NVIDIA Container Toolkit
+  - nvidia-ctk runtime configure --runtime=docker
+  - systemctl restart docker
+  # Pull Isaac Lab image in background
+  - docker pull nvcr.io/nvidia/isaac-lab:3.0.0-beta1 &
