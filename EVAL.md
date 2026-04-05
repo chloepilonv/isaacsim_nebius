@@ -11,8 +11,8 @@ Image: `ubuntu22.04-cuda12` + `nvcr.io/nvidia/isaac-lab:3.0.0-beta1`
 | Streaming client connection | Works | PASS |
 | Protocol | WebRTC via `kit` binary + `isaacsim.exp.full.streaming.kit` | |
 | Rendering FPS (server-side) | 60 FPS / 16.65ms frame time | PASS |
-| Subjective latency | _TODO: measure with mouse_ | |
-| Usable for interactive work? | Yes (trackpad limited, mouse recommended) | |
+| Subjective latency | Responsive — orbit/zoom feels smooth on trackpad | PASS |
+| Usable for interactive work? | **YES** — interactive camera control with full datacenter scene loaded | PASS |
 
 Notes:
 - `isaac-sim.sh` does NOT work for streaming (hardcodes non-streaming kit)
@@ -109,7 +109,7 @@ Version must match kernel driver (check with `cat /proc/driver/nvidia/version`).
 | RL training throughput | **GOOD** | ~1,042 env-steps/s @ 256 envs, scales linearly |
 | VRAM headroom | **EXCELLENT** | 38+ GB free @ 256 envs (44.5 GB total) |
 | Multi-env scaling | **90%** | Near-linear, GPU parallelism works well |
-| Interactive latency | Streaming works, 60 FPS server-side. Full latency test needs mouse. | |
+| Interactive latency | **Responsive** — smooth orbit/zoom over WebRTC with full datacenter scene | PASS |
 | Production-ready? | **YES, with setup** | Requires manual driver lib install + security group config |
 | Cost-effective? | **~$1.86/hr** | Comparable to Brev L40S ($1.63/hr), but more setup required |
 
