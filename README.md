@@ -161,12 +161,14 @@ nebius vpc security-rule create --parent-id $SG_ID \
   --egress-destination-cidrs "0.0.0.0/0"
 ```
 
-Then attach to the instance:
+Then attach to the instance — **you must include BOTH the custom SG and the default SG**, otherwise outbound internet breaks:
 ```bash
 nebius compute instance update \
   --id <INSTANCE_ID> \
-  --network-interfaces '[{"name": "eth0", "ip_address": {}, "public_ip_address": {}, "subnet_id": "<SUBNET_ID>", "security_groups": [{"id": "<SG_ID>"}]}]'
+  --network-interfaces '[{"name": "eth0", "ip_address": {}, "public_ip_address": {}, "subnet_id": "<SUBNET_ID>", "security_groups": [{"id": "<CUSTOM_SG_ID>"}, {"id": "<DEFAULT_SG_ID>"}]}]'
 ```
+
+Find the default SG: `nebius vpc security-group list` (look for `default-security-group-*`).
 
 ### Ports Required
 
