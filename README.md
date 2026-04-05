@@ -22,6 +22,13 @@ Nebius GPU instances ship with **compute-only NVIDIA drivers** — CUDA works, b
 
 The kernel driver and the userspace libs must be the **same version**. Nebius pre-installs kernel driver 550.x, so you need the 550 userspace libs — not 580, not anything else.
 
+## Prerequisites
+
+- **Nebius CLI** installed and authenticated (`nebius iam get-access-token` should work)
+- **SSH key** registered in your Nebius cloud-init (see `nebius-cloud-init.yaml`)
+- **Omniverse Streaming Client** installed on your Mac ([download from NVIDIA](https://docs.omniverse.nvidia.com/streaming-client/latest/user-guide.html))
+- **Docker image**: `nvcr.io/nvidia/isaac-lab:3.0.0-beta1` (pulled automatically by setup script)
+
 ## Quick Start
 
 ```bash
@@ -37,6 +44,13 @@ bash launch_isaacsim_streaming.sh
 
 # 4. Connect from your Mac
 #    Open Omniverse Streaming Client → enter just the IP, no port
+
+# 5. (Optional) Load datacenter test scene
+#    Download assets on the instance:
+wget -O ~/datacenter_assets.zip \
+  'https://d4i3qtqj3r0z5.cloudfront.net/Datacenter_NVD%4010012.zip'
+mkdir -p ~/datacenter_assets && unzip datacenter_assets.zip -d ~/datacenter_assets
+#    Then mount when launching (see "Loading Test Scenes" section)
 ```
 
 ## What the Setup Script Does
@@ -179,12 +193,71 @@ Find the default SG: `nebius vpc security-group list` (look for `default-securit
 | 47998 | UDP | WebRTC media stream |
 | 48010 | TCP | WebRTC media fallback |
 
+## Loading Test Scenes
+
+### NVIDIA Data Center Assets Pack (9.2GB)
+
+Download directly on the instance (faster than your laptop):
+```bash
+ssh chloepv@<PUBLIC_IP>
+wget -O ~/datacenter_assets.zip \
+  'https://d4i3qtqj3r0z5.cloudfront.net/Datacenter_NVD%4010012.zip'
+mkdir -p ~/datacenter_assets
+unzip datacenter_assets.zip -d ~/datacenter_assets
+```
+
+Then launch Isaac Sim with assets mounted:
+```bash
+PUBLIC_IP=$(curl -s ifconfig.me)
+
+docker run --gpus all --network host -d \
+  -e ACCEPT_EULA=Y -e PRIVACY_CONSENT=Y -e OMNI_KIT_ALLOW_ROOT=1 \
+  -v ~/datacenter_assets:/workspace/datacenter_assets:ro \
+  --entrypoint bash \
+  --name islab-live \
+  nvcr.io/nvidia/isaac-lab:3.0.0-beta1 -c '
+/isaac-sim/kit/kit \
+  /isaac-sim/apps/isaacsim.exp.full.streaming.kit \
+  --allow-root \
+  --no-window \
+  --/exts/omni.kit.livestream.app/primaryStream/publicIp='"$PUBLIC_IP"' \
+  2>&1
+'
+```
+
+In the Streaming Client, navigate the Content browser to:
+```
+/workspace/datacenter_assets/Assets/DigitalTwin/Assets/Datacenter/Facilities/Stages/Data_Hall/
+```
+
+Available scenes:
+| File | Description |
+|------|-------------|
+| `DataHall_Full_01.usd` | Full datacenter — racks, servers, cabling, cooling |
+| `DataHall_Full_B01.usd` | Alternative full layout |
+| `DataHall_01.usd` | Empty hall (lighter, good for testing) |
+| `DataHall_NoRacks_01.usd` | Hall without racks |
+| `DataHall_Rack_42U_01.usd` | Hall with single 42U rack |
+
+Individual assets (racks, DGX nodes, switches) are in subdirectories under `/workspace/datacenter_assets/Assets/DigitalTwin/Assets/Datacenter/`.
+
 ## Connecting
 
-Use **Omniverse Streaming Client** (download from NVIDIA):
+Use **Omniverse Streaming Client** ([download from NVIDIA](https://docs.omniverse.nvidia.com/streaming-client/latest/user-guide.html)):
 - Enter just the IP address (e.g. `89.169.120.76`)
 - Do NOT add a port — it auto-discovers via 49100
 - If you get a grey screen, you probably added `:49100`
+
+### Camera Controls
+
+| Action | Mouse | Trackpad (Mac) |
+|--------|-------|----------------|
+| Orbit | Alt + Left click drag | Option + click drag |
+| Pan | Middle click drag | Option + two-finger click drag |
+| Zoom | Scroll wheel | Two-finger scroll |
+| Fly | Right click + WASD | Two-finger click + WASD |
+
+A mouse with scroll wheel is strongly recommended for interactive work.
 
 ## Driver Details
 
